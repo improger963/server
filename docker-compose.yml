@@ -18,6 +18,29 @@ services:
       - smartlink-db
       - smartlink-redis
 
+  smartlink-reverb:
+    build: .
+    command: ["php", "artisan", "reverb:start"]
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=smartlink-db
+      - DB_PORT=5432
+      - DB_DATABASE=smartlink
+      - DB_USERNAME=smartlink_user
+      - DB_PASSWORD=secure_password
+      - REDIS_HOST=smartlink-redis
+      - REDIS_PORT=6379
+      - REVERB_APP_ID=app-id
+      - REVERB_APP_KEY=app-key
+      - REVERB_APP_SECRET=app-secret
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - smartlink-db
+      - smartlink-redis
+
   smartlink-db:
     image: postgres:16-alpine
     environment:

@@ -3,12 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\Campaign;
+use App\Notifications\CampaignBudgetWarning;
 use App\Services\CampaignService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BudgetMonitoringJob implements ShouldQueue
@@ -39,6 +41,19 @@ class BudgetMonitoringJob implements ShouldQueue
             $notifiedCount = 0;
 
             foreach ($lowBudgetCampaigns as $campaign) {
+                // Calculate remaining budget and spent percentage
+                $remainingBudget = $campaign->budget - $campaign->spent;
+                $spentPercentage = ($campaign->spent / $campaign->budget) * 100;
+                
+                // Send notification when budget is running low (80% spent)
+                if ($spentPercentage >= 80) {
+                    $campaign->user->notify(new CampaignBudgetWarning(
+                        $campaign, 
+                        $remainingBudget, 
+                        $spentPercentage
+                    ));
+                }
+                
                 // Check if campaign can still run
                 if (!$campaignService->checkBudget($campaign)) {
                     // Deactivate campaign if budget is exhausted

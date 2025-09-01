@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\TransactionLog;
+use App\Notifications\BalanceTopUpSuccess;
 use App\Services\FinancialService;
 use App\Services\PayeerService;
 use Illuminate\Http\Request;
@@ -61,6 +62,9 @@ class FinancialController extends Controller
             ]);
             
             DB::commit();
+            
+            // Send notification for successful deposit
+            $user->notify(new BalanceTopUpSuccess($amount, $user->balance));
             
             return response()->json([
                 'message' => 'Deposit successful', 

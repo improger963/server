@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Withdrawal;
 use App\Models\TransactionLog;
+use App\Models\AnalyticsEvent;
+use App\Notifications\WithdrawalApproved;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -119,6 +121,9 @@ class FinancialService
 
             DB::commit();
 
+            // Send notification for approved withdrawal
+            $withdrawal->user->notify(new WithdrawalApproved($withdrawal));
+
             return [
                 'success' => true,
                 'message' => 'Withdrawal approved successfully'
@@ -130,67 +135,6 @@ class FinancialService
             return [
                 'success' => false,
                 'error' => 'Withdrawal approval failed'
-            ];
-        }
-    }
-
-    /**
-     * Reject a withdrawal request
-     *
-     * @param Withdrawal $withdrawal
-     * @param string $notes
-     * @return array
-     */
-    public function rejectWithdrawal(Withdrawal $withdrawal, $notes = null)
-    {
-        // Check if withdrawal is pending
-        if (!$withdrawal->isPending()) {
-            return [
-                'success' => false,
-                'error' => 'Withdrawal is not pending'
-            ];
-        }
-
-        // Start database transaction
-        try {
-            DB::beginTransaction();
-
-            // Unfreeze the amount back to user balance
-            $user = $withdrawal->user;
-            if (!$user->unfreezeBalance($withdrawal->amount)) {
-                throw new \Exception('Failed to unfreeze balance');
-            }
-
-            // Update withdrawal status
-            $withdrawal->update([
-                'status' => 'rejected',
-                'processed_at' => now(),
-                'notes' => $notes,
-            ]);
-
-            // Log the transaction
-            TransactionLog::create([
-                'user_id' => $withdrawal->user_id,
-                'amount' => $withdrawal->amount,
-                'type' => 'withdrawal',
-                'reference' => $withdrawal->transaction_id,
-                'status' => 'rejected',
-                'description' => 'Withdrawal rejected',
-            ]);
-
-            DB::commit();
-
-            return [
-                'success' => true,
-                'message' => 'Withdrawal rejected successfully'
-            ];
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Withdrawal rejection error: ' . $e->getMessage());
-
-            return [
-                'success' => false,
-                'error' => 'Withdrawal rejection failed'
             ];
         }
     }
@@ -239,6 +183,9 @@ class FinancialService
                 'description' => 'Withdrawal processed',
             ]);
 
+            // Track spending analytics
+            $this->trackSpending($user->id, $withdrawal->id, $withdrawal->amount);
+
             DB::commit();
 
             return [
@@ -283,5 +230,43 @@ class FinancialService
     public function getAvailableBalanceForWithdrawal(User $user)
     {
         return $user->getAvailableBalance();
+    }
+
+    /**
+     * Track spending analytics event
+     *
+     * @param int $userId
+     * @param int $campaignId
+     * @param float $amount
+     * @return void
+     */
+    public function trackSpending($userId, $campaignId, $amount)
+    {
+        AnalyticsEvent::create([
+            'user_id' => $userId,
+            'type' => 'spend',
+            'related_id' => $campaignId,
+            'related_type' => 'campaign',
+            'cost' => $amount,
+        ]);
+    }
+
+    /**
+     * Track earning analytics event
+     *
+     * @param int $userId
+     * @param int $siteId
+     * @param float $amount
+     * @return void
+     */
+    public function trackEarning($userId, $siteId, $amount)
+    {
+        AnalyticsEvent::create([
+            'user_id' => $userId,
+            'type' => 'earning',
+            'related_id' => $siteId,
+            'related_type' => 'site',
+            'cost' => $amount,
+        ]);
     }
 }

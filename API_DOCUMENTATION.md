@@ -506,6 +506,255 @@ Campaign Not Found (404):
 }
 ```
 
+## Analytics Endpoints
+
+### Get Dashboard Statistics
+
+Get analytics dashboard statistics for the authenticated user.
+
+**Endpoint:** `GET /api/stats/dashboard`
+
+**Headers:**
+- `Authorization: Bearer <token>`
+
+**Query Parameters:**
+- `period` (optional): Filter by time period. Options: `today`, `week`, `month`, `year`. Default: `month`.
+
+**Response Example (200):**
+```json
+{
+  "revenue": 250.00,
+  "spend": 1000.00,
+  "impressions": 5000,
+  "clicks": 250,
+  "ctr": 5.00
+}
+```
+
+## Notification Endpoints
+
+### List Notifications
+
+Get all notifications for the authenticated user.
+
+**Endpoint:** `GET /api/notifications`
+
+**Headers:**
+- `Authorization: Bearer <token>`
+
+**Response Example (200):**
+```json
+{
+  "data": [
+    {
+      "id": "1",
+      "type": "App\\Notifications\\BalanceTopUpSuccess",
+      "notifiable_type": "App\\Models\\User",
+      "notifiable_id": 1,
+      "data": {
+        "amount": 100.00,
+        "transaction_id": "TXN_12345",
+        "balance_after": 250.00
+      },
+      "read_at": null,
+      "created_at": "2025-09-01 10:00:00",
+      "updated_at": "2025-09-01 10:00:00"
+    }
+  ],
+  "links": {
+    "first": "http://localhost/api/notifications?page=1",
+    "last": "http://localhost/api/notifications?page=1",
+    "prev": null,
+    "next": null
+  },
+  "meta": {
+    "current_page": 1,
+    "from": 1,
+    "last_page": 1,
+    "path": "http://localhost/api/notifications",
+    "per_page": 20,
+    "to": 1,
+    "total": 1
+  }
+}
+```
+
+---
+
+### Mark Notification as Read
+
+Mark a notification as read.
+
+**Endpoint:** `POST /api/notifications/{id}/read`
+
+**Headers:**
+- `Authorization: Bearer <token>`
+
+**Response Examples:**
+
+Success (200):
+```json
+{
+  "message": "Notification marked as read"
+}
+```
+
+Notification Not Found (404):
+```json
+{
+  "error": "Notification not found"
+}
+```
+
+---
+
+### Mark All Notifications as Read
+
+Mark all notifications as read.
+
+**Endpoint:** `POST /api/notifications/read-all`
+
+**Headers:**
+- `Authorization: Bearer <token>`
+
+**Response:**
+```json
+{
+  "message": "All notifications marked as read"
+}
+```
+
+## Chat Endpoints
+
+### Get Chat Messages
+
+Get recent chat messages.
+
+**Endpoint:** `GET /api/chat/messages`
+
+**Headers:**
+- `Authorization: Bearer <token>`
+
+**Response Example (200):**
+```json
+[
+  {
+    "id": 1,
+    "user_id": 1,
+    "message": "Hello, world!",
+    "created_at": "2025-09-01 10:00:00",
+    "updated_at": "2025-09-01 10:00:00",
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  }
+]
+```
+
+---
+
+### Send Chat Message
+
+Send a chat message.
+
+**Endpoint:** `POST /api/chat/messages`
+
+**Headers:**
+- `Authorization: Bearer <token>`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "message": "Hello, world!"
+}
+```
+
+**Response Examples:**
+
+Success (201):
+```json
+{
+  "id": 2,
+  "user_id": 1,
+  "message": "Hello, world!",
+  "created_at": "2025-09-01 10:00:00",
+  "updated_at": "2025-09-01 10:00:00",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+```
+
+Validation Error (422):
+```json
+{
+  "errors": {
+    "message": [
+      "The message field is required."
+    ]
+  }
+}
+```
+
+## News Endpoints
+
+### Get Published News
+
+Get all published news items.
+
+**Endpoint:** `GET /api/news`
+
+**Response Example (200):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "title": "New Feature Release",
+      "content": "We're excited to announce the release of our new analytics dashboard...",
+      "author": "Jane Smith",
+      "is_published": true,
+      "published_at": "2025-09-01 10:00:00",
+      "created_at": "2025-09-01 09:00:00",
+      "updated_at": "2025-09-01 09:00:00"
+    }
+  ],
+  "links": {
+    "first": "http://localhost/api/news?page=1",
+    "last": "http://localhost/api/news?page=1",
+    "prev": null,
+    "next": null
+  },
+  "meta": {
+    "current_page": 1,
+    "from": 1,
+    "last_page": 1,
+    "path": "http://localhost/api/news",
+    "per_page": 10,
+    "to": 1,
+    "total": 1
+  }
+}
+```
+
+---
+
+### Admin News Management
+
+Manage news items (admin only).
+
+**Endpoints:**
+- `GET /api/admin/news` - List all news items
+- `POST /api/admin/news` - Create a news item
+- `GET /api/admin/news/{news}` - Get a specific news item
+- `PUT /api/admin/news/{news}` - Update a news item
+- `DELETE /api/admin/news/{news}` - Delete a news item
+
 ## Error Response Codes
 
 | Code | Description |
@@ -528,3 +777,4 @@ Financial operations are rate-limited to prevent abuse:
 - Withdrawal requests: 5 per minute
 
 Exceeding these limits will result in a 429 (Too Many Requests) response.
+</parameter_content>

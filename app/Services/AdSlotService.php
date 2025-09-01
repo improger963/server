@@ -6,6 +6,7 @@ use App\Models\AdSlot;
 use App\Models\Campaign;
 use App\Models\Creative;
 use App\Models\TransactionLog;
+use App\Models\AnalyticsEvent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -169,6 +170,9 @@ class AdSlotService
             'description' => 'Impression charge for ad slot #' . $adSlot->id . ' and campaign #' . $campaign->id,
         ]);
 
+        // Track impression analytics
+        $this->trackImpression($campaign->user_id, $campaign->id, $adSlot->price_per_impression);
+
         return [
             'success' => true,
             'creative' => $creative,
@@ -312,5 +316,43 @@ class AdSlotService
                 'error' => 'Impression charge failed'
             ];
         }
+    }
+
+    /**
+     * Track impression analytics event
+     *
+     * @param int $userId
+     * @param int $campaignId
+     * @param float $cost
+     * @return void
+     */
+    public function trackImpression($userId, $campaignId, $cost)
+    {
+        AnalyticsEvent::create([
+            'user_id' => $userId,
+            'type' => 'impression',
+            'related_id' => $campaignId,
+            'related_type' => 'campaign',
+            'cost' => $cost,
+        ]);
+    }
+
+    /**
+     * Track click analytics event
+     *
+     * @param int $userId
+     * @param int $campaignId
+     * @param float $cost
+     * @return void
+     */
+    public function trackClick($userId, $campaignId, $cost)
+    {
+        AnalyticsEvent::create([
+            'user_id' => $userId,
+            'type' => 'click',
+            'related_id' => $campaignId,
+            'related_type' => 'campaign',
+            'cost' => $cost,
+        ]);
     }
 }

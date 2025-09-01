@@ -43,6 +43,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/deposit', [App\Http\Controllers\Api\FinancialController::class, 'deposit']);
     Route::post('/withdraw', [App\Http\Controllers\Api\FinancialController::class, 'withdraw']);
     Route::get('/profile/referral-stats', [App\Http\Controllers\Api\AuthController::class, 'referralStats']);
+    
+    // Notification routes
+    Route::get('/notifications', [App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    
+    // Stats routes
+    Route::get('/stats/dashboard', [App\Http\Controllers\Api\StatsController::class, 'dashboard']);
+    
+    // Chat routes
+    Route::get('/chat/messages', [App\Http\Controllers\Api\ChatController::class, 'index']);
+    Route::post('/chat/messages', [App\Http\Controllers\Api\ChatController::class, 'store']);
+    Route::post('/chat/messages/private', [App\Http\Controllers\Api\ChatController::class, 'sendPrivateMessage']);
+    Route::post('/chat/typing', [App\Http\Controllers\Api\ChatController::class, 'typing']);
+    Route::post('/chat/messages/{id}/read', [App\Http\Controllers\Api\ChatController::class, 'markAsRead']);
+    Route::get('/chat/users/online', [App\Http\Controllers\Api\ChatController::class, 'getOnlineUsers']);
+    
+    // News routes
+    Route::get('/news', [App\Http\Controllers\Api\NewsController::class, 'index']);
+    
+    // Admin news routes
+    Route::prefix('admin')->group(function () {
+        Route::apiResource('news', App\Http\Controllers\Api\Admin\NewsController::class);
+    });
 });
 
 // Payeer webhook endpoint (no authentication required)
