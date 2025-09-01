@@ -128,4 +128,27 @@ class AdSlotController extends Controller
         
         return response()->json(['error' => 'Failed to dissociate campaign'], 500);
     }
+
+    /**
+     * Process an ad request for an ad slot.
+     */
+    public function requestAd(AdSlot $adSlot)
+    {
+        // Process ad request
+        $result = $this->adSlotService->processAdRequest($adSlot);
+        
+        if ($result['success']) {
+            return response()->json([
+                'creative' => $result['creative'],
+                'campaign_id' => $result['campaign_id']
+            ]);
+        }
+        
+        // Return appropriate error response
+        if ($result['error'] === 'Ad slot is not active') {
+            return response()->json(['error' => $result['error']], 410); // Gone
+        }
+        
+        return response()->json(['error' => $result['error']], 404);
+    }
 }

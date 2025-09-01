@@ -76,6 +76,23 @@ class ValidationService
             $errors['price_per_impression'] = 'Price per impression must be non-negative.';
         }
         
+        // Validate dimensions for banner type
+        if (isset($data['type']) && $data['type'] === 'banner') {
+            if (isset($data['dimensions'])) {
+                if (!is_array($data['dimensions'])) {
+                    $errors['dimensions'] = 'Dimensions must be an array.';
+                } else {
+                    if (!isset($data['dimensions']['width']) || !is_numeric($data['dimensions']['width'])) {
+                        $errors['dimensions'] = 'Banner dimensions must include a valid width.';
+                    }
+                    
+                    if (!isset($data['dimensions']['height']) || !is_numeric($data['dimensions']['height'])) {
+                        $errors['dimensions'] = 'Banner dimensions must include a valid height.';
+                    }
+                }
+            }
+        }
+        
         return $errors;
     }
     
@@ -91,12 +108,55 @@ class ValidationService
         
         // Check content based on type
         if (isset($data['type']) && isset($data['content'])) {
-            if ($data['type'] === 'banner' && empty($data['content'])) {
-                $errors['content'] = 'Banner creatives must have content.';
-            }
-            
-            if ($data['type'] === 'text' && empty($data['content'])) {
-                $errors['content'] = 'Text creatives must have content.';
+            switch ($data['type']) {
+                case 'banner':
+                    if (empty($data['content']['image_url'])) {
+                        $errors['content'] = 'Banner creatives must have an image URL.';
+                    }
+                    if (empty($data['content']['target_url'])) {
+                        $errors['content'] = 'Banner creatives must have a target URL.';
+                    }
+                    break;
+                    
+                case 'link':
+                    if (empty($data['content']['text'])) {
+                        $errors['content'] = 'Link creatives must have text content.';
+                    }
+                    if (empty($data['content']['target_url'])) {
+                        $errors['content'] = 'Link creatives must have a target URL.';
+                    }
+                    break;
+                    
+                case 'context':
+                    if (empty($data['content']['title'])) {
+                        $errors['content'] = 'Context creatives must have a title.';
+                    }
+                    if (empty($data['content']['description'])) {
+                        $errors['content'] = 'Context creatives must have a description.';
+                    }
+                    if (empty($data['content']['target_url'])) {
+                        $errors['content'] = 'Context creatives must have a target URL.';
+                    }
+                    break;
+                    
+                case 'creative_image_text':
+                    if (empty($data['content']['image_url'])) {
+                        $errors['content'] = 'Creative image text creatives must have an image URL.';
+                    }
+                    if (empty($data['content']['title'])) {
+                        $errors['content'] = 'Creative image text creatives must have a title.';
+                    }
+                    if (empty($data['content']['description'])) {
+                        $errors['content'] = 'Creative image text creatives must have a description.';
+                    }
+                    if (empty($data['content']['target_url'])) {
+                        $errors['content'] = 'Creative image text creatives must have a target URL.';
+                    }
+                    break;
+                    
+                default:
+                    $errors['type'] = 'Invalid creative type.';
+                    break;
             }
         }
         

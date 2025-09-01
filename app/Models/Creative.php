@@ -30,7 +30,24 @@ class Creative extends Model
      */
     protected $casts = [
         'is_active' => 'boolean',
+        'content' => 'array', // Changed to array for JSON handling
     ];
+
+    // Updated type constants
+    const TYPE_BANNER = 'banner';
+    const TYPE_LINK = 'link';
+    const TYPE_CONTEXT = 'context';
+    const TYPE_CREATIVE_IMAGE_TEXT = 'creative_image_text';
+
+    public static function getAvailableTypes()
+    {
+        return [
+            self::TYPE_BANNER,
+            self::TYPE_LINK,
+            self::TYPE_CONTEXT,
+            self::TYPE_CREATIVE_IMAGE_TEXT,
+        ];
+    }
 
     /**
      * Get the campaign that owns the creative.

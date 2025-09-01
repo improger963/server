@@ -6,10 +6,12 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +23,9 @@ class User extends Authenticatable
         'email',
         'password',
         'balance',
+        'frozen_balance',
+        'referrer_id',
+        'referral_code',
     ];
 
     /**
@@ -41,6 +46,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'balance' => 'decimal:2',
+        'frozen_balance' => 'decimal:2',
     ];
 
     /**
@@ -104,5 +110,94 @@ class User extends Authenticatable
     public function hasBalance($amount)
     {
         return $this->balance >= $amount;
+    }
+
+    /**
+     * Freeze amount from user balance
+     *
+     * @param float $amount
+     * @return bool
+     */
+    public function freezeBalance($amount)
+    {
+        if ($this->balance < $amount) {
+            return false;
+        }
+
+        $this->balance -= $amount;
+        $this->frozen_balance += $amount;
+        return $this->save();
+    }
+
+    /**
+     * Unfreeze amount back to user balance
+     *
+     * @param float $amount
+     * @return bool
+     */
+    public function unfreezeBalance($amount)
+    {
+        if ($this->frozen_balance < $amount) {
+            return false;
+        }
+
+        $this->frozen_balance -= $amount;
+        $this->balance += $amount;
+        return $this->save();
+    }
+
+    /**
+     * Get available balance (excluding frozen balance)
+     *
+     * @return float
+     */
+    public function getAvailableBalance()
+    {
+        return $this->balance;
+    }
+
+    /**
+     * Get total frozen balance
+     *
+     * @return float
+     */
+    public function getFrozenBalance()
+    {
+        return $this->frozen_balance;
+    }
+
+    /**
+     * Get the referrer (user who referred this user).
+     */
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, 'referrer_id');
+    }
+
+    /**
+     * Get the referrals (users referred by this user).
+     */
+    public function referrals()
+    {
+        return $this->hasMany(User::class, 'referrer_id');
+    }
+
+    /**
+     * Get the referral earnings for this user.
+     */
+    public function referralEarnings()
+    {
+        return $this->hasMany(ReferralEarning::class);
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }

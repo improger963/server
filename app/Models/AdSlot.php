@@ -14,7 +14,8 @@ class AdSlot extends Model
     protected $fillable = [
         'site_id',
         'name',
-        'size',
+        'type', // Renamed from size
+        'dimensions',
         'price_per_click',
         'price_per_impression',
         'is_active',
@@ -29,6 +30,7 @@ class AdSlot extends Model
         'price_per_click' => 'decimal:4',
         'price_per_impression' => 'decimal:4',
         'is_active' => 'boolean',
+        'dimensions' => 'array', // Added for JSON handling
     ];
 
     /**

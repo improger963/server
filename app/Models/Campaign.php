@@ -142,4 +142,60 @@ class Campaign extends Model
     {
         return $this->isRunning() && $this->hasBudget();
     }
+
+    /**
+     * Check if campaign has expired
+     *
+     * @return bool
+     */
+    public function checkIfExpired()
+    {
+        $now = now();
+        return $this->end_date !== null && $this->end_date < $now;
+    }
+
+    /**
+     * Return unused budget back to user
+     *
+     * @return bool
+     */
+    public function returnUnusedBudget()
+    {
+        $unusedBudget = $this->budget - $this->spent;
+        
+        if ($unusedBudget <= 0) {
+            return true;
+        }
+        
+        // Add unused budget back to user balance
+        $this->user->addBalance($unusedBudget);
+        
+        // Reset campaign budget
+        $this->budget = $this->spent;
+        return $this->save();
+    }
+
+    /**
+     * Get remaining budget for the campaign
+     *
+     * @return float
+     */
+    public function getRemainingBudget()
+    {
+        return $this->budget - $this->spent;
+    }
+
+    /**
+     * Get spent budget percentage
+     *
+     * @return float
+     */
+    public function getSpentPercentage()
+    {
+        if ($this->budget == 0) {
+            return 0;
+        }
+        
+        return ($this->spent / $this->budget) * 100;
+    }
 }
