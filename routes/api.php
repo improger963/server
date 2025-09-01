@@ -63,6 +63,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // News routes
     Route::get('/news', [App\Http\Controllers\Api\NewsController::class, 'index']);
     
+
+    // Ticket routes
+    Route::apiResource('tickets', App\Http\Controllers\Api\TicketController::class);
+    Route::post('/tickets/{ticket}/reply', [App\Http\Controllers\Api\TicketController::class, 'reply']);
+    Route::post('/tickets/{ticket}/status', [App\Http\Controllers\Api\TicketController::class, 'updateStatus']);
+    Route::post('/tickets/{ticket}/assign', [App\Http\Controllers\Api\TicketController::class, 'assign']);
+    
     // Admin news routes
     Route::prefix('admin')->group(function () {
         Route::apiResource('news', App\Http\Controllers\Api\Admin\NewsController::class);

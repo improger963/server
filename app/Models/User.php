@@ -200,4 +200,20 @@ class User extends Authenticatable
     {
         $this->notify(new ResetPasswordNotification($token));
     }
+    
+    /**
+     * Check if user is admin
+     *
+     * @return bool
+     */
+    public function hasRole($role)
+    {
+        // For now, we'll consider user with ID 1 as admin
+        // In a real application, you would have a proper role system
+        if ($role === 'admin') {
+            return $this->id === 1;
+        }
+        
+        return false;
+    }
 }
