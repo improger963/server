@@ -4,13 +4,19 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - DB_CONNECTION=pgsql
       - DB_HOST=smartlink-db
+      - DB_PORT=5432
+      - DB_DATABASE=smartlink
+      - DB_USERNAME=smartlink_user
+      - DB_PASSWORD=secure_password
       - REDIS_HOST=smartlink-redis
+      - REDIS_PORT=6379
+    volumes:
+      - .:/var/www/html
     depends_on:
       - smartlink-db
       - smartlink-redis
-    volumes:
-      - .:/var/www/html
 
   smartlink-db:
     image: postgres:16-alpine
